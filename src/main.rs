@@ -1,4 +1,5 @@
 use dual_shock4_controller::joystick::{DeviceInfo, Joystick};
+use moving_avg::MovingAverage;
 
 // Analog inputs are jittery, we need a moving average of some size to smooth out the values
 const WINDOW_SIZE: usize = 50; // Higher values are less responsive but less jittery
@@ -12,12 +13,7 @@ fn main() {
     let device = joystick.connect(device_info).expect("can't find device!"); //
     let gamepad = joystick.get_gamepad();
 
-    // Values for our moving weighted average
-    // Non-rusty way; this can be improved
-    // TODO also implement for the y axis and the other stick
-    let mut index = 0;
-    let mut sum: usize = 0;
-    let mut readings: [usize; WINDOW_SIZE] = [0; WINDOW_SIZE];
+    let mut avergage_left_x = MovingAverage::<f32>::new(WINDOW_SIZE);
 
     // Main event loop
     loop {
@@ -33,24 +29,8 @@ fn main() {
         }
         let stick = state.stick.left_stick;
 
-        // Remove the oldest entry from the sum
-        sum = sum - readings[index];
-
-        // Read the value from the controller
         let value = stick.x;
 
-        // Add the newest reading to the window
-        readings[index] = value as usize;
-
-        // Add the newest reading to the sum
-        sum += value as usize;
-
-        // Increment index and wrap to the window size
-        // TODO, this is prone to runtime errors
-        index = (index + 1) % WINDOW_SIZE;
-
-        // Get an average of the window, which is our smoothed value
-        let averaged = sum / WINDOW_SIZE;
-        println!("{averaged}");
+        println!("{}", avergage_left_x.feed(value as f32));
     }
 }

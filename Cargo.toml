@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 dual-shock4-controller = "0.1.1"
+moving_avg = "0.2.0"
